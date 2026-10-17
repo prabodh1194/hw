@@ -30,4 +30,27 @@ Sized specifically for the **20 cm gap** between the recessed window grill (`X =
 
 ---
 
-**Estimated Total:** **~₹4,025 INR**
+## 💰 BUDGET BUILD (target ≤ ₹1,100, off-the-shelf only)
+
+*Use this instead of the list above if the crib load stays ≤ 25 kg (empty-ish cot). All links verified live on Amazon.in.*
+
+| # | Part | Why this one | Qty | Price | Link |
+|---|------|--------------|-----|-------|------|
+| 1 | **3V–12V Mini Linear Actuator, 50 mm stroke** | Cheapest 50 mm stroke actuator with built-in limit switches + brackets. Plastic rack-and-pinion, rated a few N — **marginal, works only on an unloaded cot** | 1 | ₹499 | [amazon.in/dp/B0H8YW4PXX](https://www.amazon.in/dp/B0H8YW4PXX) |
+| 2 | **ACTUORIX Mini Linear Actuator 50 mm, 3–9 V** | Slightly stronger sibling of #1, same price band | 1 | ₹599 | [amazon.in/dp/B0HLHF2Z65](https://www.amazon.in/dp/B0HLHF2Z65) |
+| 3 | **L298N Motor Driver Module** | Reverses polarity to extend/retract the actuator; any H-bridge works | 1 | ₹100 | [amazon.in/dp/B0G2MKGL2R](https://www.amazon.in/dp/B0G2MKGL2R) |
+| 4 | **12V 2A Power Adapter (5.5 × 2.1 mm)** | Enough for the budget actuator (draws < 1 A) | 1 | ₹250 | [amazon.in/dp/B08WH9MWHN](https://www.amazon.in/dp/B08WH9MWHN) |
+| 5 | **M6 square U-bolts + M4 bolts + felt strip** | Clamps for grill bar and crib rail — local hardware shop | 1 set | ₹100 | — |
+| 6 | **3D print `u_bolt_bracket.stl` + `l_bracket.stl`** | Black PETG from a local print shop | 2 | ₹150 | — |
+
+**Total: ₹1,099** (with #1). If you reuse any 12V adapter and any Arduino/ESP board from home, it drops to **~₹700**.
+
+**Reality check on the cheap actuator**
+- The ₹499 / ₹599 units are **plastic rack-and-pinion** toys rated for a few newtons. On a cot with a baby in it (27–35 kg) they will stall, whine, and strip within days.
+- The cheapest **metal-gearbox** linear actuator on Amazon.in starts around **₹2,500** (real units list ₹2,800 for brackets alone).
+- A metal actuator at `300N+` is what makes this safe and silent. The ₹1k path is a **proof-of-concept on an empty cot**, not a baby-ready install.
+
+**Salvage list — what to look for (and why the milk frother does not help)**
+- The InstaCuppa frother has a **3V DC motor + AA battery pack**. Nothing in it is a linear actuator, and its motor has no gearbox. It cannot push a crib.
+- Salvageable sources, only if you have them: **old router/monitor 12V adapter** (`₹0`), **old toy car** (DC motor + gearbox, `₹0`), **old DVD drive** (stepper + lead screw = a real linear actuator, `₹0`), **old robot/Arduino kit** (MCU + H-bridge, `₹0`).
+- With none of those, buy items 1–6 above.
