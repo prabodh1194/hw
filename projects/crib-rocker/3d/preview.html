@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crib Rocker 3D Interactive Viewer — Room & Mechanism Layout</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: rgba(15, 23, 42, 0.88);
+      --border: rgba(148, 163, 184, 0.25);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, sans-serif;
+    }
+    #hud {
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 20;
+      width: 340px;
+      background: var(--panel);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+    }
+    #hud h1 {
+      margin: 0 0 4px;
+      font-size: 15px;
+      font-weight: 700;
+    }
+    #hud p {
+      margin: 0 0 12px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+    .btn-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    button {
+      background: rgba(51, 65, 85, 0.75);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    button:hover, button.active {
+      background: rgba(56, 189, 248, 0.22);
+      border-color: var(--accent);
+    }
+    .control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+    input[type="range"] { width: 155px; accent-color: var(--accent); }
+    .label-3d {
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: rgba(15, 23, 42, 0.90);
+      border: 1.5px solid var(--accent);
+      color: #f8fafc;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+      pointer-events: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+  </style>
+</head>
+<body>
+  <div id="hud">
+    <h1>Crib Rocker 3D Mock Model</h1>
+    <p>Matches <code>IMG_2438.jpg</code>: Window Grill (left) → 20 cm Actuator Bridge → HunyHuny Cot (center) → Parent Bed (right).</p>
+    <div class="btn-row">
+      <button id="cam-photo" class="active">1. Photo Angle</button>
+      <button id="cam-closeup">2. Mechanism Detail</button>
+      <button id="cam-front">3. Front Kinematic</button>
+      <button id="cam-top">4. Top-Down Plan</button>
+    </div>
+    <div class="btn-row">
+      <button id="toggle-rock" class="active">Pause Rocking</button>
+      <button id="toggle-labels" class="active">Hide Labels</button>
+    </div>
+    <div class="control-row">
+      <span>Rocking Speed (RPM)</span>
+      <input id="rpm-slider" type="range" min="5" max="30" value="14" />
+    </div>
+  </div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module">
+    import * as THREE from "three";
+    import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+    import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+    import { CSS2DRenderer, CSS2DObject } from "three/addons/renderers/CSS2DRenderer.js";
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0f172a);
+    // Z-up to match CAD coordinate system (X = Window->Crib->Bed, Y = Front->Back, Z = Height)
+    THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
+
+    const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.02, 20);
+    camera.up.set(0, 0, 1);
+    camera.position.set(-0.62, -1.65, 1.38);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    document.body.appendChild(renderer.domElement);
+
+    const labelRenderer = new CSS2DRenderer();
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.domElement.style.position = "absolute";
+    labelRenderer.domElement.style.top = "0px";
+    labelRenderer.domElement.style.pointerEvents = "none";
+    document.body.appendChild(labelRenderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.set(0.28, -0.10, 0.55);
+    controls.enableDamping = true;
+    controls.update();
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.72));
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.15);
+    dirLight.position.set(-1.2, -1.8, 2.4);
+    scene.add(dirLight);
+    const fillLight = new THREE.DirectionalLight(0x93c5fd, 0.45);
+    fillLight.position.set(1.5, 1.2, 1.0);
+    scene.add(fillLight);
+
+    const CALLOUTS = [
+      { pos: [-0.20, -0.02, 1.16], text: "Black Window Grill (Anchor @ X=-20cm)", color: "#38bdf8" },
+      { pos: [-0.17, 0.42, 1.22], text: "Yellow Window Curtain (Back-Left)", color: "#eab308" },
+      { pos: [-0.25, -0.48, 0.80], text: "ESP32 + Driver Pod (On Window Sill)", color: "#22c55e" },
+      { pos: [-0.09, -0.38, 0.82], text: "12V Silent Linear Actuator (20cm Bridge)", color: "#f97316" },
+      { pos: [0.02, -0.38, 0.84], text: "Felt-Lined Crib Rail Clamp (No-Drill)", color: "#a855f7" },
+      { pos: [0.34, -0.56, 0.96], text: "HunyHuny Arched Footboard + Drop Panel", color: "#c084fc" },
+      { pos: [0.34, 0.56, 0.96], text: "Arched Headboard + Pastel Bumpers", color: "#ec4899" },
+      { pos: [0.34, -0.56, 0.04], text: "Curved Rocker Rail (±4° Gentle Roll)", color: "#f59e0b" },
+      { pos: [-0.08, -0.78, 0.70], text: "Foreground White Side Table / Desk", color: "#94a3b8" },
+      { pos: [1.03, -0.10, 0.54], text: "Adjacent Parent Bed (Right Side)", color: "#60a5fa" },
+    ];
+
+    const labelObjects = [];
+    for (const c of CALLOUTS) {
+      const div = document.createElement("div");
+      div.className = "label-3d";
+      div.style.borderColor = c.color;
+      div.textContent = c.text;
+      const obj = new CSS2DObject(div);
+      obj.position.set(...c.pos);
+      scene.add(obj);
+      labelObjects.push(obj);
+    }
+
+    let cribNode = null;
+    let clampNode = null;
+    const loader = new GLTFLoader();
+    loader.load("crib-rocker-assembly.glb", (gltf) => {
+      gltf.scene.traverse((child) => {
+        if (child.isMesh) {
+          child.material = new THREE.MeshStandardMaterial({
+            vertexColors: true,
+            roughness: 0.48,
+            metalness: 0.15,
+          });
+        }
+        if (child.name === "crib_frame") cribNode = child;
+        if (child.name === "l_bracket") clampNode = child;
+      });
+      scene.add(gltf.scene);
+    });
+
+    let rocking = true;
+    let labelsVisible = true;
+    const rpmInput = document.getElementById("rpm-slider");
+
+    document.getElementById("toggle-rock").onclick = (e) => {
+      rocking = !rocking;
+      e.target.textContent = rocking ? "Pause Rocking" : "Play Rocking";
+      e.target.classList.toggle("active", rocking);
+    };
+    document.getElementById("toggle-labels").onclick = (e) => {
+      labelsVisible = !labelsVisible;
+      e.target.textContent = labelsVisible ? "Hide Labels" : "Show Labels";
+      e.target.classList.toggle("active", labelsVisible);
+      labelObjects.forEach((o) => (o.visible = labelsVisible));
+    };
+
+    const presets = {
+      "cam-photo": { pos: [-0.62, -1.65, 1.38], target: [0.28, -0.10, 0.55] },
+      "cam-closeup": { pos: [-0.42, -0.82, 0.96], target: [-0.08, -0.38, 0.78] },
+      "cam-front": { pos: [0.34, -1.85, 0.68], target: [0.34, -0.10, 0.52] },
+      "cam-top": { pos: [0.34, -0.08, 2.35], target: [0.34, -0.05, 0.40] },
+    };
+    Object.entries(presets).forEach(([id, p]) => {
+      document.getElementById(id).onclick = (e) => {
+        document.querySelectorAll("#hud .btn-row:first-of-type button").forEach((b) => b.classList.remove("active"));
+        e.target.classList.add("active");
+        camera.position.set(...p.pos);
+        controls.target.set(...p.target);
+        controls.update();
+      };
+    });
+
+    const clock = new THREE.Clock();
+    function animate() {
+      requestAnimationFrame(animate);
+      if (rocking && cribNode) {
+        const rpm = parseFloat(rpmInput.value);
+        const omega = (rpm / 60) * Math.PI * 2;
+        const dx = 0.022 * Math.sin(clock.getElapsedTime() * omega);
+        cribNode.position.x = dx;
+        if (clampNode) clampNode.position.x = dx;
+      }
+      controls.update();
+      renderer.render(scene, camera);
+      labelRenderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
