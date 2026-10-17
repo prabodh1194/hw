@@ -106,6 +106,10 @@
       <span>Rocking Speed (RPM)</span>
       <input id="rpm-slider" type="range" min="5" max="30" value="14" />
     </div>
+    <div class="control-row">
+      <span>Explode Assembly</span>
+      <input id="explode-slider" type="range" min="0" max="100" value="0" />
+    </div>
   </div>
 
   <script type="importmap">
@@ -183,6 +187,9 @@
 
     let cribNode = null;
     let clampNode = null;
+    let grillClampNode = null;
+    let actuatorNode = null;
+    let podNode = null;
     const loader = new GLTFLoader();
     loader.load("crib-rocker-assembly.glb", (gltf) => {
       gltf.scene.traverse((child) => {
@@ -195,6 +202,9 @@
         }
         if (child.name === "crib_frame") cribNode = child;
         if (child.name === "l_bracket") clampNode = child;
+        if (child.name === "u_bolt_bracket") grillClampNode = child;
+        if (child.name === "actuator") actuatorNode = child;
+        if (child.name === "pivot_pin") podNode = child;
       });
       scene.add(gltf.scene);
     });
@@ -202,6 +212,7 @@
     let rocking = true;
     let labelsVisible = true;
     const rpmInput = document.getElementById("rpm-slider");
+    const explodeInput = document.getElementById("explode-slider");
 
     document.getElementById("toggle-rock").onclick = (e) => {
       rocking = !rocking;
@@ -234,13 +245,15 @@
     const clock = new THREE.Clock();
     function animate() {
       requestAnimationFrame(animate);
-      if (rocking && cribNode) {
-        const rpm = parseFloat(rpmInput.value);
-        const omega = (rpm / 60) * Math.PI * 2;
-        const dx = 0.022 * Math.sin(clock.getElapsedTime() * omega);
-        cribNode.position.x = dx;
-        if (clampNode) clampNode.position.x = dx;
-      }
+      const ex = parseFloat(explodeInput.value) / 100.0;
+      const rpm = parseFloat(rpmInput.value);
+      const omega = (rpm / 60) * Math.PI * 2;
+      const dx = rocking && ex === 0 ? 0.022 * Math.sin(clock.getElapsedTime() * omega) : 0;
+      if (cribNode) cribNode.position.x = dx;
+      if (grillClampNode) grillClampNode.position.set(-0.06 * ex, 0, 0.03 * ex);
+      if (actuatorNode) actuatorNode.position.set(0, 0, 0.06 * ex);
+      if (clampNode) clampNode.position.set(dx + 0.06 * ex, 0, 0.03 * ex);
+      if (podNode) podNode.position.set(0, -0.06 * ex, 0.08 * ex);
       controls.update();
       renderer.render(scene, camera);
       labelRenderer.render(scene, camera);

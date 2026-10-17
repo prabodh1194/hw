@@ -1,81 +1,36 @@
 ---
 name: 3d-modeling
-description: "Create 3D models for hardware projects using Python and trimesh. Use when designing parts, mechanisms, or assemblies for fabrication or 3D printing."
+description: "Build photo-calibrated 3D hardware mock models, globally depth-sorted 4-view labeled engineering sheets (preview.png), exploded assembly guides (assembly-steps.png), printable STL/GLB bundles, and interactive Three.js WebGL viewers (preview.html). Use whenever designing hardware mechanisms, brackets, enclosures, or room/fixture layouts."
 ---
 
-# 3D Modeling for Hardware Projects
+# 3D Hardware Modeling & Interactive Assembly Skill
 
-## When to Use
+Turn a real-world photo + hardware concept into:
+1. **Printable STL part files** + a **multi-node color GLB assembly**
+2. **A 4-panel shaded, globally depth-sorted engineering sheet (`preview.png`)** with non-overlapping 2D margin callouts
+3. **A 4-step exploded & sequential assembly sheet (`assembly-steps.png`)**
+4. **An interactive Z-up Three.js + CSS2DRenderer web viewer (`preview.html`)** with camera presets, floating 3D labels, explode slider, and live kinematic animation
 
-- Designing custom brackets, mounts, or enclosures
-- Creating assemblies to check fit and clearances
-- Generating STL files for 3D printing
-- Exporting GLB for web viewing or documentation
+## Reusable Toolkit
 
-## Tools
+Import helpers from `/Users/pbd/personal/hw/skills/3d-modeling/hw3d.py`:
+- `box(extents, center, rgba)` — colored box placed at world coordinates `(x, y, z)`
+- `cyl(radius, height, center, rgba, axis="z", sections=40)` — colored cylinder oriented along `x`, `y`, or `z`
+- `parabolic_arc(xs, y_pos, z_base, coeff, width_y, height_z, rgba, x_center)` — shallow segmented arc for rockers, arches, or curved brackets (never use a full `torus` when you need a partial arc)
+- `export_bundle(parts_dict, out_dir, name)` — exports `<part>.stl`, combined `<name>.stl`, and multi-node `<name>.glb` (preserving node names for animation/explode and per-vertex colors)
+- `draw_scene_unified(ax, parts_dict, bounds=None)` — combines all visible triangles across all parts into a **single** `Poly3DCollection` so matplotlib depth-sorts globally (prevents background walls from occluding foreground parts)
+- `add_callouts_2d(ax, callouts)` — projects 3D anchor points `(x, y, z)` via `proj3d.proj_transform` into 2D data coordinates and places callout boxes in `axes fraction` margin coordinates `(px, py)` so labels never collide
 
-- **trimesh** — Python library for 3D geometry
-- **numpy** — numerical operations
-- **STL** — standard 3D printing format
-- **GLB** — web-friendly 3D format
+## Core Rules
 
-## Setup
-
-```bash
-cd /Users/pbd/personal/hw
-source .venv/bin/activate
-```
-
-## Workflow
-
-1. **Design principles** — Apple-inspired: rounded edges, clean lines, minimal visible fasteners
-2. **Create parts** — each part as a separate function
-3. **Export individual parts** — STL for 3D printing
-4. **Export assembly** — STL + GLB for visualization
-
-## Example
-
-```python
-import trimesh
-import numpy as np
-
-def create_bracket():
-    """Create a mounting bracket."""
-    plate = trimesh.creation.box(extents=[0.06, 0.015, 0.08])
-    plate.apply_translation([0, 0, 0.04])
-    return plate
-
-bracket = create_bracket()
-bracket.export("bracket.stl")
-```
-
-## File Structure
-
-```
-projects/<project>/3d/
-├── generate_model.py    # Main generation script
-├── *.stl               # Individual parts
-├── *-assembly.stl      # Assembled scene
-└── *-assembly.glb      # Web-viewable format
-```
-
-## Design Guidelines
-
-- Use rounded edges (radius 0.002–0.005) for premium look
-- Keep proportions realistic (mm scale)
-- Use smooth curves (torus, cylinder) over sharp boxes
-- Export at 48+ sections for smooth surfaces
-- Name parts descriptively: `u_bolt_bracket.stl`, `l_bracket.stl`
-
-## Rotation in Trimesh
-
-```python
-# Correct way to rotate in trimesh
-rot = trimesh.transformations.rotation_matrix(angle, [x, y, z])
-mesh.apply_transform(rot)
-```
-
-## Resources
-
-- [trimesh docs](https://trimsh.org/)
-- [STL format](https://en.wikipedia.org/wiki/STL_(file_format))
+1. **Calibrate to the User's Photo First**:
+   - Read the reference photo before writing geometry.
+   - Establish a single right-handed **Z-up** world coordinate system in meters (`X` left-to-right, `Y` front-to-back, `Z` height above floor).
+   - Include surrounding context objects from the photo (window sill, grill bars, curtains, adjacent furniture) so mounting clearances are self-evident.
+2. **Never Use Full Toruses for Shallow Arcs**:
+   - Use `parabolic_arc(...)` to build shallow segmented arcs with realistic cross-sections.
+3. **Preserve Multi-Node Hierarchy & Vertex Colors in GLB**:
+   - Export GLB with `trimesh.Scene()` adding each part via `scene.add_geometry(mesh, node_name=name)`.
+   - In Three.js, set `new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.48, metalness: 0.15 })` and `THREE.Object3D.DEFAULT_UP.set(0, 0, 1)`.
+4. **Always Render Labeled Multi-View Sheets (`preview.png` & `assembly-steps.png`)**:
+   - Call `fig.canvas.draw()` before `add_callouts_2d(ax, callouts)` so `ax.get_proj()` is finalized, then inspect the output PNG with `read` to verify zero label overlap.
