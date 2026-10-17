@@ -86,6 +86,46 @@
       pointer-events: none;
       box-shadow: 0 4px 12px rgba(0,0,0,0.4);
     }
+    #shop-card {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 20;
+      width: 330px;
+      max-height: calc(100vh - 32px);
+      overflow-y: auto;
+      background: var(--panel);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 14px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+      font-size: 11.5px;
+    }
+    #shop-card h2 {
+      margin: 0 0 8px;
+      font-size: 13.5px;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .shop-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+      gap: 8px;
+    }
+    .shop-item:last-child { border-bottom: none; }
+    .shop-item a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .shop-item a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -110,6 +150,21 @@
       <span>Explode Assembly</span>
       <input id="explode-slider" type="range" min="0" max="100" value="0" />
     </div>
+  </div>
+
+  <div id="shop-card">
+    <h2><span>🛒 Amazon.in Shopping List</span><span style="color:#22c55e;">~₹4,025</span></h2>
+    <div class="shop-item"><span>1. 12V 50mm Linear Actuator (₹1,650)</span><a href="https://www.amazon.in/dp/B0HLHF2Z65" target="_blank">Order ↗</a></div>
+    <div class="shop-item"><span>2. M6 Clevis Pins + R-Clips (₹150)</span><a href="https://www.amazon.in/dp/B0DJ2BVWYG" target="_blank">Order ↗</a></div>
+    <div class="shop-item"><span>3. ESP32 DevKit V1 30-Pin (₹380)</span><a href="https://www.amazon.in/dp/B08VRN4V6B" target="_blank">Order ↗</a></div>
+    <div class="shop-item"><span>4. BTS7960 43A Silent Driver (₹260)</span><a href="https://www.amazon.in/dp/B079S5GQNR" target="_blank">Order ↗</a></div>
+    <div class="shop-item"><span>5. LM2596 12V→5V Buck (₹95)</span><a href="https://www.amazon.in/dp/B0HCW58V9H" target="_blank">Order ↗</a></div>
+    <div class="shop-item"><span>6. 12V 3A Power Supply (₹420)</span><a href="https://www.amazon.in/dp/B0G4B3F33K" target="_blank">Order ↗</a></div>
+    <div class="shop-item"><span>7. 16mm LED E-Stop Button (₹140)</span><a href="https://www.amazon.in/dp/B0DY82YJZK" target="_blank">Order ↗</a></div>
+    <div class="shop-item"><span>8. White ABS Pod Box (₹190)</span><a href="https://www.amazon.in/dp/B0B1QN2LSH" target="_blank">Order ↗</a></div>
+    <div class="shop-item"><span>9. M6 Square U-Bolt Clamps (₹240)</span><a href="https://www.amazon.in/dp/B0F2S4C1VQ" target="_blank">Order ↗</a></div>
+    <div class="shop-item"><span>10. 3mm Felt Pad Strip (₹220)</span><a href="https://www.amazon.in/dp/B0H36TLSV5" target="_blank">Order ↗</a></div>
+    <div class="shop-item"><span>11. M4/M6 Bolts + Jumper Wires (₹280)</span><a href="https://www.amazon.in/dp/B08F4JY2XP" target="_blank">Order ↗</a></div>
   </div>
 
   <script type="importmap">
